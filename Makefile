@@ -1,5 +1,8 @@
 all: main.exe
 
+main.o: main.cpp
+	g++ -o main.o -c main.cpp
+
 static.o: static.cpp
 	g++ -o static.o -c static.cpp
 
@@ -7,33 +10,30 @@ shared.o: shared.cpp
 # Position Independent Code
 	g++ -fPIC -o shared.o -c shared.cpp
 
-static.lib: static.o
+libstatic.a: static.o
 # r - replace or insert
 # c - do not warn
-	ar rc static.lib static.o
+	ar rc libstatic.a static.o
 
-shared.dll: shared.o
-	g++ -shared -o shared.dll shared.o 
+libshared.so: shared.o
+	g++ -shared -o libshared.so shared.o 
 
-main.o: main.cpp
-	g++ -o main.o -c main.cpp
+main.exe: main.o libstatic.a libshared.so
+	g++ -o main.exe main.o -L./ -lstatic -lshared
 
-main.exe: main.o static.lib shared.dll
-	g++ -o main.exe main.o static.lib shared.dll
-
-.PHONY: all check-syntax install clean dist-clean
+.PHONY: all install clean dist-clean check-syntax
 
 install:
-	cp shared.dll /usr/local/lib/
+	cp libshared.so /usr/local/lib/ && ldconfig
 
 clean:
 	-rm ./*.o
-	-rm ./*.lib
-	-rm ./*.dll
+	-rm ./lib*.a
+	-rm ./lib*.so
 	-rm ./main.exe
 
 dist-clean: clean
-	-rm /usr/local/lib/shared.dll
+	-rm /usr/local/lib/libshared.so && ldconfig
 
 check-syntax:
-	$(COMPILE.cc) -S $(CHK_SOURCES) -o /dev/null
+	$(COMPILE.cc) -fsyntax-only $(CHK_SOURCES)
