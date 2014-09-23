@@ -1,5 +1,8 @@
 all: main.exe
 
+preprocess:
+	g++ -E main.cpp
+
 main.o: main.cpp
 	g++ -o main.o -c main.cpp
 
@@ -21,7 +24,7 @@ libshared.so: shared.o
 main.exe: main.o libstatic.a libshared.so
 	g++ -o main.exe main.o -L./ -lstatic -lshared
 
-.PHONY: all install clean dist-clean check-syntax
+.PHONY: all preprocess install clean dist-clean check-syntax
 
 install:
 	cp libshared.so /usr/local/lib/ && ldconfig
